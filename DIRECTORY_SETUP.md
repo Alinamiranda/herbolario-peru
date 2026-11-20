@@ -1,0 +1,7 @@
+# HU-02: directorio
+
+El directorio requiere una sesión autenticada. Los filtros geográficos se generan a partir de las ubicaciones de establecimientos existentes; no representan un catálogo oficial ni incluyen localidades sin establecimientos. La consulta está paginada en grupos de 20 y usa la función `directory_locations` para obtener las opciones sin aplicar el límite de filas de PostgREST.
+
+Antes de aplicar `supabase/migrations/20261122000000_establishments_directory.sql`, verifica que la tabla y las políticas de HU-01 existan en Supabase y que coincidan con las migraciones del repositorio. Revisa las concesiones directas y heredadas y las políticas existentes: las políticas permisivas se combinan con OR. La migración habilita lectura para `authenticated` y limita los privilegios directos de lectura a las columnas públicas; no concede permisos de escritura ni modifica la política de inserción. Revisa posibles impactos en otras consultas que necesiten el identificador del propietario.
+
+Aplica la migración mediante el editor SQL o el procedimiento de migraciones, y prueba con cuentas reales en un entorno de prueba: un comprador puede leer las columnas públicas y no puede leer `owner_id`, insertar ni actualizar; un vendedor puede insertar solo sus propios registros; un usuario anónimo no puede leer. Comprueba también filtros combinados, paginación y ubicaciones dependientes. Las pruebas locales con `node --test tests/*.test.cjs` no sustituyen estas pruebas de RLS.
