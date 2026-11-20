@@ -1,0 +1,20 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Node's built-in CommonJS test runner. */
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const ts = require('typescript');
+const vm = require('node:vm');
+const exportsObject = {};
+const js = ts.transpileModule(fs.readFileSync('lib/establishment-detail.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+vm.runInNewContext(js, { exports: exportsObject, URL, encodeURIComponent });
+const { getEstablishment, validEstablishmentId, normalizePeruvianPhone, contactLinks, safeDirectoryReturn, DETAIL_COLUMNS } = exportsObject;
+const id = 'fbc5833c-d444-49b2-a02a-5ada14a60e11';
+test('obtiene un establecimiento activo por UUID', async () => { const result = await getEstablishment({read:async input => ({data:{id:input,is_active:true},error:false})}, id); assert.equal(result.status,'ok'); });
+test('oculta el detalle de un establecimiento inactivo', async () => { const result = await getEstablishment({read:async input => ({data:{id:input,is_active:false},error:false})}, id); assert.equal(result.status,'not-found'); });
+test('rechaza UUID inválido sin consultar la base', async () => { assert.equal(validEstablishmentId('invalid'),false); const result = await getEstablishment({read:async()=>assert.fail('No debe consultar')}, 'invalid'); assert.equal(result.status,'not-found'); });
+test('distingue establecimiento inexistente y error de consulta', async () => { assert.equal((await getEstablishment({read:async()=>({data:null,error:false})},id)).status,'not-found'); assert.equal((await getEstablishment({read:async()=>({data:null,error:true})},id)).status,'error'); });
+test('normaliza teléfonos peruanos', () => { assert.equal(normalizePeruvianPhone('+51 987-654-321'),'51987654321'); assert.equal(normalizePeruvianPhone('987654321'),'51987654321'); });
+test('genera enlace WhatsApp y llamada válidos', () => { const links=contactLinks('987654321'); assert.equal(links.phone,'tel:+51987654321'); assert.ok(links.whatsapp.startsWith('https://wa.me/51987654321?text=')); });
+test('no genera enlaces con teléfono inválido', () => { assert.equal(contactLinks('https://ejemplo.com'),null); assert.equal(contactLinks('123'),null); });
+test('retorna a filtros del directorio y rechaza redirecciones externas', () => { assert.equal(safeDirectoryReturn('/directorio?name=hierbas&page=2'),'/directorio?name=hierbas&page=2'); assert.equal(safeDirectoryReturn('//evil.example/directorio'),'/directorio'); assert.equal(safeDirectoryReturn('/cuenta'),'/directorio'); });
+test('consulta solo columnas públicas', () => { assert.ok(!DETAIL_COLUMNS.includes('owner_id')); assert.ok(!DETAIL_COLUMNS.includes('created_at')); assert.ok(!DETAIL_COLUMNS.includes('updated_at')); });

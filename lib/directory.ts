@@ -1,6 +1,7 @@
 export type Location = { department: string; province: string; district: string };
 export type SearchFilters = { name: string; department: string; province: string; district: string; page: number };
 export type PublicEstablishment = Location & { id: string; name: string; description: string; address: string; phone: string };
+export const DIRECTORY_ACTIVE = true;
 export const PAGE_SIZE = 20;
 export function parseFilters(params: Record<string, string | string[] | undefined>): { filters?: SearchFilters; error?: string } {
  const keys = ['name', 'department', 'province', 'district'] as const;
