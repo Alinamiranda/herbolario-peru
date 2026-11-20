@@ -1,0 +1,7 @@
+# HU-03: consulta y disponibilidad
+
+La página de detalle necesita la tabla y los permisos de lectura de HU-02. Consulta solo las columnas públicas y utiliza la sesión del usuario. Con Supabase configurado, comprueba con dos cuentas que la lectura respeta RLS, que no se exponen datos del propietario y que el enlace desde el directorio conserva los filtros.
+
+La tabla remota fue inspeccionada por la propietaria del proyecto y no contiene una columna `is_active`. La migración `20261123000000_establishments_availability.sql` la añade, establece activos los registros existentes y modifica las políticas para proteger los inactivos. No se ha aplicado remotamente; el directorio y el detalle requieren esa migración para funcionar con el nuevo filtro.
+
+Antes de aplicarla, revisa las políticas y concesiones reales, incluidos permisos de escritura por tabla, columna y roles heredados. La política restrictiva protege contra la combinación OR de políticas permisivas, permitiendo al propietario leer sus propias filas inactivas; el directorio, el detalle y la función de ubicaciones excluyen todas las inactivas. La migración revoca UPDATE a nivel de tabla para los roles públicos indicados, lo que podría afectar permisos de actualización que se hubieran añadido fuera de las migraciones del repositorio. Prueba con cuentas de distintos roles y consultas directas tras aplicarla. Las pruebas locales no verifican RLS real.
