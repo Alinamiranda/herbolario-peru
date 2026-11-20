@@ -1,0 +1,9 @@
+# HU-10: configuración de autenticación
+
+1. Crea un proyecto Supabase y copia `.env.example` a `.env.local`. Completa `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` con la URL y la clave publicable (o clave anon pública) del proyecto. Define `NEXT_PUBLIC_SITE_URL` con el origen de la aplicación, sin barra final. Nunca uses la clave secreta o service role en estas variables.
+2. Ejecuta `supabase/migrations/20261119000000_profiles.sql` en el editor SQL del proyecto. La tabla usa RLS y los clientes no pueden modificar perfiles ni roles. Para nombrar un administrador, un operador autorizado debe actualizar el rol mediante SQL privilegiado; nunca desde el cliente.
+3. En Authentication, habilita el proveedor Email y la confirmación de correo. Configura la URL del sitio y permite en Redirect URLs `http://localhost:3000/auth/callback` y `http://localhost:3000/auth/callback?next=/restablecer`; añade las equivalentes del dominio de producción. Configura SMTP para entrega de correos en producción.
+4. Para el flujo PKCE de confirmación, configura la plantilla de confirmación de Supabase para dirigir al enlace proporcionado por `{{ .ConfirmationURL }}`. Comprueba también la plantilla de recuperación y las URLs permitidas en el proyecto.
+5. Ejecuta `npm run dev`. Los términos de uso son un marcador pendiente de publicación y deben ser sustituidos por el texto aprobado antes de abrir el registro al público.
+
+La prueba unitaria se ejecuta con `node --test tests/validation.test.cjs`. Para la aceptación integral, con un proyecto Supabase de prueba configurado verifica registro y confirmación, sesión persistente, credenciales incorrectas, recuperación, cierre de sesión y acceso anónimo a `/cuenta`; comprueba además que un usuario autenticado no pueda insertar o actualizar su perfil ni asignarse `admin` mediante la API. Estas pruebas requieren credenciales y conexión reales.
