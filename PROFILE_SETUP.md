@@ -1,0 +1,7 @@
+# HU-11: perfiles y permisos
+
+Revisa las políticas y privilegios reales de `public.profiles` en el proyecto Supabase antes de aplicar la migración `supabase/migrations/20261120000000_profile_name_update.sql`. La migración conserva RLS, permite a `authenticated` actualizar exclusivamente la columna `full_name` y limita la fila al usuario de la sesión. Comprueba también que no existan permisos de actualización concedidos mediante otros roles heredados ni políticas adicionales que permitan modificar otras filas; las políticas permisivas se combinan con OR. No concede acceso a administradores desde el navegador.
+
+La migración debe aplicarse con un rol propietario o administrador desde el editor SQL o el flujo de migraciones del proyecto. Para asignar `admin`, utiliza un procedimiento administrativo privilegiado fuera del cliente. La función `authorizeRoles` en `lib/profile-server.ts` consulta el usuario verificado y el rol de la tabla; úsala al implementar cada recurso y acción de vendedor o administrador. Todavía no existen funcionalidades específicas de esos roles en este proyecto.
+
+Ejecuta `node --test tests/*.test.cjs`. Con un proyecto Supabase de prueba, verifica además con dos cuentas la lectura y actualización del propio nombre, el rechazo de cambios de rol y de perfiles ajenos mediante la API, y el acceso sin sesión. Las pruebas locales con dobles no sustituyen la verificación de privilegios y RLS en la base de datos real.
